@@ -1,0 +1,2 @@
+# requirments for travel match CLI
+mysql-connector-python>=8.0.0

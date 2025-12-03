@@ -1,0 +1,27 @@
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual enviroment
+.venv/
+
+
+# IDE stuff
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Database credentials (if you make a local config)
+db_config_local.py
+
+# Logs
+*.log
