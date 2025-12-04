@@ -20,7 +20,12 @@ def show_menu():
     print("9.  View Student's Travel Plans")
     print("10. Find Rideshare Matches (Flights)")
     print("11. Find Rideshare Matches (Trains)")
-    print("12. Exit")
+    print("12. Create Transport Group")
+    print("13. Join Transport Group")
+    print("14. Leave Group")
+    print("15. View My Group Members")
+    print("16. View All Groups")
+    print("17. Exit")
     print("="*60)
 
 # handl adding studnet
@@ -364,6 +369,125 @@ def handle_find_train_matches():
 
     print(f"\nTotal: {len(matches)} student(s) - potential rideshare group!")
 
+# create new transport group
+def handle_create_group():
+    print("\n--- Create Transport Group ---")
+    print("Groups allow friends/roommates to coordinate travel together\n")
+
+    group_name = input("Enter Group Name: ").strip()
+    if not group_name:
+        print("Group name cannot be empty!")
+        return
+
+    group_id = db.create_group(group_name)
+    if group_id:
+        print(f"\nGroup created successfully!")
+        print(f"Group ID: {group_id}")
+        print(f"Group Name: {group_name}")
+        print("\nShare this Group ID with your friends so they can join!")
+    else:
+        print("Failed to create group")
+
+# join existing transport group
+def handle_join_group():
+    print("\n--- Join Transport Group ---")
+    print("Enter your Case ID and the Group ID to join\n")
+
+    case_id = input("Enter Your Case ID: ").strip()
+    if not case_id:
+        print("Case ID cannot be empty!")
+        return
+
+    try:
+        group_id = int(input("Enter Group ID to Join: ").strip())
+    except ValueError:
+        print("Please enter a valid group ID number!")
+        return
+
+    if db.join_group(case_id, group_id):
+        print(f"\nSuccessfully joined group {group_id}!")
+        print("You and your group members will be matched together for ridesharing")
+    else:
+        print("Failed to join group")
+
+# leave current group
+def handle_leave_group():
+    print("\n--- Leave Group ---")
+
+    case_id = input("Enter Your Case ID: ").strip()
+    if not case_id:
+        print("Case ID cannot be empty!")
+        return
+
+    # check if student is in a group first
+    group_info = db.get_student_group(case_id)
+    if not group_info:
+        print("You are not currently in any group")
+        return
+
+    group_id, group_name = group_info
+    print(f"\nYou are currently in: {group_name} (ID: {group_id})")
+
+    confirm = input("Are you sure you want to leave? (yes/no): ").strip().lower()
+    if confirm != 'yes':
+        print("Cancelled")
+        return
+
+    if db.leave_group(case_id):
+        print(f"\nYou have left the group '{group_name}'")
+    else:
+        print("Failed to leave group")
+
+# view members in your group
+def handle_view_my_group():
+    print("\n--- My Group Members ---")
+
+    case_id = input("Enter Your Case ID: ").strip()
+    if not case_id:
+        print("Case ID cannot be empty!")
+        return
+
+    group_info = db.get_student_group(case_id)
+    if not group_info:
+        print("You are not currently in any group")
+        return
+
+    group_id, group_name = group_info
+    print(f"\n** Group: {group_name} (ID: {group_id}) **\n")
+
+    members = db.get_group_members(group_id)
+    if not members:
+        print("No members found in this group")
+        return
+
+    print(f"{'Case ID':<15} {'Full Name':<30} {'Year':<8}")
+    print("-" * 55)
+
+    for member in members:
+        case_id, name, year = member
+        print(f"{case_id:<15} {name:<30} {year:<8}")
+
+    print(f"\nTotal: {len(members)} member(s) in your group")
+
+# view all available groups
+def handle_view_all_groups():
+    print("\n--- All Transport Groups ---")
+    groups = db.view_all_groups()
+
+    if not groups:
+        print("No groups found")
+        return
+
+    print(f"{'Group ID':<12} {'Group Name':<30} {'Members':<10}")
+    print("-" * 55)
+
+    for group in groups:
+        group_id, group_name, member_count = group
+        print(f"{group_id:<12} {group_name:<30} {member_count:<10}")
+
+    print(f"\nTotal: {len(groups)} group(s)")
+    print("\nUse option 13 to join a group by its Group ID")
+
 # main program loop
 
 
@@ -380,7 +504,7 @@ def main():
         show_menu()
 
         try:
-            choice = input("\nEnter your choice (1-12): ").strip()
+            choice = input("\nEnter your choice (1-17): ").strip()
 
             if choice == '1':
                 handle_add_student()
@@ -405,10 +529,20 @@ def main():
             elif choice == '11':
                 handle_find_train_matches()
             elif choice == '12':
+                handle_create_group()
+            elif choice == '13':
+                handle_join_group()
+            elif choice == '14':
+                handle_leave_group()
+            elif choice == '15':
+                handle_view_my_group()
+            elif choice == '16':
+                handle_view_all_groups()
+            elif choice == '17':
                 print("\n Exiting travel match system!")
                 break
             else:
-                print("Invalid choice! Please enter a number between 1 and 12")
+                print("Invalid choice! Please enter a number between 1 and 17")
 
             # wait for user before showing menu again
             input("\nPress Enter to continue ")

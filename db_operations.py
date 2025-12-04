@@ -236,6 +236,7 @@ def get_student_bookings(case_id):
         return None, None
 
 # find students going to same destination with flexible time matching
+# includes group expansion - if matched student is in group, returns all group members
 def find_matching_flights(departing_airport, flight_time, flight_date, time_window_hours=2):
     conn = get_connection()
     if not conn:
@@ -243,9 +244,9 @@ def find_matching_flights(departing_airport, flight_time, flight_date, time_wind
 
     try:
         cursor = conn.cursor()
-        # find students going to same destination airport within time window on same date
+        # first find students going to same destination airport within time window on same date
         query = """
-        SELECT s.case_id, s.full_name, f.flight_no, f.flight_time, f.flight_date, f.departing_airport
+        SELECT s.case_id, s.full_name, f.flight_no, f.flight_time, f.flight_date, f.departing_airport, s.group_id
         FROM Student s
         JOIN StudentFlight sf ON s.case_id = sf.case_id
         JOIN Flight f ON sf.flight_no = f.flight_no
@@ -258,10 +259,46 @@ def find_matching_flights(departing_airport, flight_time, flight_date, time_wind
         time_window = f"{time_window_hours}:00:00"
         cursor.execute(query, (departing_airport, flight_date, flight_time, time_window,
                               flight_time, time_window))
-        results = cursor.fetchall()
+        direct_matches = cursor.fetchall()
+
+        # collect all unique group ids from matches
+        group_ids = set()
+        for match in direct_matches:
+            group_id = match[6]  # group_id is at index 6
+            if group_id is not None:
+                group_ids.add(group_id)
+
+        # get all members of matched groups
+        all_results = []
+        seen_case_ids = set()
+
+        # add direct matches first
+        for match in direct_matches:
+            case_id = match[0]
+            if case_id not in seen_case_ids:
+                all_results.append(match[:6])  # exclude group_id from final result
+                seen_case_ids.add(case_id)
+
+        # now add all other group members who arent already in results
+        for group_id in group_ids:
+            group_query = """
+            SELECT s.case_id, s.full_name, 'GROUP MEMBER' as flight_no,
+                   NULL as flight_time, NULL as flight_date, NULL as departing_airport
+            FROM Student s
+            WHERE s.group_id = %s
+            """
+            cursor.execute(group_query, (group_id,))
+            group_members = cursor.fetchall()
+
+            for member in group_members:
+                case_id = member[0]
+                if case_id not in seen_case_ids:
+                    all_results.append(member)
+                    seen_case_ids.add(case_id)
+
         cursor.close()
         conn.close()
-        return results
+        return all_results
     except Error as e:
         print(f"Error finding matches: {e}")
         if conn:
@@ -291,6 +328,152 @@ def find_matching_trains(train_date, departing_station):
         return results
     except Error as e:
         print(f"Error finding train matches: {e}")
+        if conn:
+            conn.close()
+        return []
+
+# create a new transport group
+def create_group(group_name):
+    conn = get_connection()
+    if not conn:
+        return None
+
+    try:
+        cursor = conn.cursor()
+        query = "INSERT INTO TransportGroup (group_name) VALUES (%s)"
+        cursor.execute(query, (group_name,))
+        conn.commit()
+        group_id = cursor.lastrowid  # get the auto-generated ID
+        cursor.close()
+        conn.close()
+        return group_id
+    except Error as e:
+        print(f"Error creating group: {e}")
+        if conn:
+            conn.close()
+        return None
+
+# join a transport group
+def join_group(case_id, group_id):
+    conn = get_connection()
+    if not conn:
+        return False
+
+    try:
+        cursor = conn.cursor()
+        # check if group exists
+        cursor.execute("SELECT group_id FROM TransportGroup WHERE group_id = %s", (group_id,))
+        if not cursor.fetchone():
+            print("Group not found!")
+            cursor.close()
+            conn.close()
+            return False
+
+        # update student's group_id
+        query = "UPDATE Student SET group_id = %s WHERE case_id = %s"
+        cursor.execute(query, (group_id, case_id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+    except Error as e:
+        print(f"Error joining group: {e}")
+        if conn:
+            conn.close()
+        return False
+
+# leave transport group
+def leave_group(case_id):
+    conn = get_connection()
+    if not conn:
+        return False
+
+    try:
+        cursor = conn.cursor()
+        query = "UPDATE Student SET group_id = NULL WHERE case_id = %s"
+        cursor.execute(query, (case_id,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+    except Error as e:
+        print(f"Error leaving group: {e}")
+        if conn:
+            conn.close()
+        return False
+
+# get all members of a group
+def get_group_members(group_id):
+    conn = get_connection()
+    if not conn:
+        return []
+
+    try:
+        cursor = conn.cursor()
+        query = """
+        SELECT s.case_id, s.full_name, s.year_of_study
+        FROM Student s
+        WHERE s.group_id = %s
+        ORDER BY s.full_name
+        """
+        cursor.execute(query, (group_id,))
+        results = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return results
+    except Error as e:
+        print(f"Error getting group members: {e}")
+        if conn:
+            conn.close()
+        return []
+
+# get student's group info
+def get_student_group(case_id):
+    conn = get_connection()
+    if not conn:
+        return None
+
+    try:
+        cursor = conn.cursor()
+        query = """
+        SELECT tg.group_id, tg.group_name
+        FROM Student s
+        JOIN TransportGroup tg ON s.group_id = tg.group_id
+        WHERE s.case_id = %s
+        """
+        cursor.execute(query, (case_id,))
+        result = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        return result
+    except Error as e:
+        print(f"Error getting student group: {e}")
+        if conn:
+            conn.close()
+        return None
+
+# view all available groups
+def view_all_groups():
+    conn = get_connection()
+    if not conn:
+        return []
+
+    try:
+        cursor = conn.cursor()
+        query = """
+        SELECT tg.group_id, tg.group_name, COUNT(s.case_id) as member_count
+        FROM TransportGroup tg
+        LEFT JOIN Student s ON tg.group_id = s.group_id
+        GROUP BY tg.group_id, tg.group_name
+        ORDER BY tg.group_name
+        """
+        cursor.execute(query)
+        results = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return results
+    except Error as e:
+        print(f"Error getting groups: {e}")
         if conn:
             conn.close()
         return []
