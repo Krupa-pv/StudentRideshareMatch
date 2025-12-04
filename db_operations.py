@@ -2,6 +2,8 @@ from db_config import get_connection
 from mysql.connector import Error
 
 # function to add new student to database
+
+
 def add_student(case_id, full_name, year_of_study):
     conn = get_connection()
     if not conn:
@@ -9,6 +11,15 @@ def add_student(case_id, full_name, year_of_study):
 
     try:
         cursor = conn.cursor()
+        # Check if student already exists
+        cursor.execute(
+            "SELECT case_id FROM Student WHERE case_id = %s", (case_id,))
+        if cursor.fetchone():
+            print(f"Student with case_id '{case_id}' already exists!")
+            cursor.close()
+            conn.close()
+            return False
+
         query = "INSERT INTO Student (case_id, full_name, year_of_study) VALUES (%s, %s, %s)"
         cursor.execute(query, (case_id, full_name, year_of_study))
         conn.commit()
@@ -22,6 +33,8 @@ def add_student(case_id, full_name, year_of_study):
         return False
 
 # get all students from db
+
+
 def view_all_students():
     conn = get_connection()
     if not conn:
@@ -42,6 +55,8 @@ def view_all_students():
         return []
 
 # add new flight to system
+
+
 def add_flight(flight_no, flight_date, flight_time, departing_airport):
     conn = get_connection()
     if not conn:
@@ -50,7 +65,8 @@ def add_flight(flight_no, flight_date, flight_time, departing_airport):
     try:
         cursor = conn.cursor()
         query = "INSERT INTO Flight (flight_no, flight_date, flight_time, departing_airport) VALUES (%s, %s, %s, %s)"
-        cursor.execute(query, (flight_no, flight_date, flight_time, departing_airport))
+        cursor.execute(query, (flight_no, flight_date,
+                       flight_time, departing_airport))
         conn.commit()
         cursor.close()
         conn.close()
@@ -62,6 +78,8 @@ def add_flight(flight_no, flight_date, flight_time, departing_airport):
         return False
 
 # show all flights
+
+
 def view_all_flights():
     conn = get_connection()
     if not conn:
@@ -82,6 +100,8 @@ def view_all_flights():
         return []
 
 # add train to database
+
+
 def add_train(train_no, train_date, train_time, departing_station):
     conn = get_connection()
     if not conn:
@@ -90,7 +110,8 @@ def add_train(train_no, train_date, train_time, departing_station):
     try:
         cursor = conn.cursor()
         query = "INSERT INTO Train (train_no, train_date, train_time, departing_station) VALUES (%s, %s, %s, %s)"
-        cursor.execute(query, (train_no, train_date, train_time, departing_station))
+        cursor.execute(query, (train_no, train_date,
+                       train_time, departing_station))
         conn.commit()
         cursor.close()
         conn.close()
@@ -102,6 +123,8 @@ def add_train(train_no, train_date, train_time, departing_station):
         return False
 
 # view all trains
+
+
 def view_all_trains():
     conn = get_connection()
     if not conn:
@@ -122,6 +145,8 @@ def view_all_trains():
         return []
 
 # book student on a flight - needs confirmation code
+
+
 def book_student_flight(confirmation_code, case_id, flight_no):
     conn = get_connection()
     if not conn:
@@ -130,7 +155,8 @@ def book_student_flight(confirmation_code, case_id, flight_no):
     try:
         cursor = conn.cursor()
         # first check if student exists
-        cursor.execute("SELECT case_id FROM Student WHERE case_id = %s", (case_id,))
+        cursor.execute(
+            "SELECT case_id FROM Student WHERE case_id = %s", (case_id,))
         if not cursor.fetchone():
             print("Student not found!")
             cursor.close()
@@ -138,7 +164,8 @@ def book_student_flight(confirmation_code, case_id, flight_no):
             return False
 
         # check if flight exists
-        cursor.execute("SELECT flight_no FROM Flight WHERE flight_no = %s", (flight_no,))
+        cursor.execute(
+            "SELECT flight_no FROM Flight WHERE flight_no = %s", (flight_no,))
         if not cursor.fetchone():
             print("Flight not found!")
             cursor.close()
@@ -159,6 +186,8 @@ def book_student_flight(confirmation_code, case_id, flight_no):
         return False
 
 # book student on train
+
+
 def book_student_train(confirmation_code, case_id, train_no):
     conn = get_connection()
     if not conn:
@@ -167,7 +196,8 @@ def book_student_train(confirmation_code, case_id, train_no):
     try:
         cursor = conn.cursor()
         # check student exists
-        cursor.execute("SELECT case_id FROM Student WHERE case_id = %s", (case_id,))
+        cursor.execute(
+            "SELECT case_id FROM Student WHERE case_id = %s", (case_id,))
         if not cursor.fetchone():
             print("Student not found!")
             cursor.close()
@@ -175,7 +205,8 @@ def book_student_train(confirmation_code, case_id, train_no):
             return False
 
         # check train exists
-        cursor.execute("SELECT train_no FROM Train WHERE train_no = %s", (train_no,))
+        cursor.execute(
+            "SELECT train_no FROM Train WHERE train_no = %s", (train_no,))
         if not cursor.fetchone():
             print("Train not found!")
             cursor.close()
@@ -196,6 +227,8 @@ def book_student_train(confirmation_code, case_id, train_no):
         return False
 
 # get all bookings for a student (both flights and trains)
+
+
 def get_student_bookings(case_id):
     conn = get_connection()
     if not conn:
@@ -237,6 +270,8 @@ def get_student_bookings(case_id):
 
 # find students going to same destination with flexible time matching
 # includes group expansion - if matched student is in group, returns all group members
+
+
 def find_matching_flights(departing_airport, flight_time, flight_date, time_window_hours=2):
     conn = get_connection()
     if not conn:
@@ -258,7 +293,7 @@ def find_matching_flights(departing_airport, flight_time, flight_date, time_wind
         """
         time_window = f"{time_window_hours}:00:00"
         cursor.execute(query, (departing_airport, flight_date, flight_time, time_window,
-                              flight_time, time_window))
+                               flight_time, time_window))
         direct_matches = cursor.fetchall()
 
         # collect all unique group ids from matches
@@ -276,7 +311,8 @@ def find_matching_flights(departing_airport, flight_time, flight_date, time_wind
         for match in direct_matches:
             case_id = match[0]
             if case_id not in seen_case_ids:
-                all_results.append(match[:6])  # exclude group_id from final result
+                # exclude group_id from final result
+                all_results.append(match[:6])
                 seen_case_ids.add(case_id)
 
         # now add all other group members who arent already in results
@@ -306,6 +342,8 @@ def find_matching_flights(departing_airport, flight_time, flight_date, time_wind
         return []
 
 # find students on same train - for rideshare matching
+
+
 def find_matching_trains(train_date, departing_station):
     conn = get_connection()
     if not conn:
@@ -333,6 +371,8 @@ def find_matching_trains(train_date, departing_station):
         return []
 
 # create a new transport group
+
+
 def create_group(group_name):
     conn = get_connection()
     if not conn:
@@ -354,6 +394,8 @@ def create_group(group_name):
         return None
 
 # join a transport group
+
+
 def join_group(case_id, group_id):
     conn = get_connection()
     if not conn:
@@ -362,7 +404,8 @@ def join_group(case_id, group_id):
     try:
         cursor = conn.cursor()
         # check if group exists
-        cursor.execute("SELECT group_id FROM TransportGroup WHERE group_id = %s", (group_id,))
+        cursor.execute(
+            "SELECT group_id FROM TransportGroup WHERE group_id = %s", (group_id,))
         if not cursor.fetchone():
             print("Group not found!")
             cursor.close()
@@ -383,6 +426,8 @@ def join_group(case_id, group_id):
         return False
 
 # leave transport group
+
+
 def leave_group(case_id):
     conn = get_connection()
     if not conn:
@@ -403,6 +448,8 @@ def leave_group(case_id):
         return False
 
 # get all members of a group
+
+
 def get_group_members(group_id):
     conn = get_connection()
     if not conn:
@@ -428,6 +475,8 @@ def get_group_members(group_id):
         return []
 
 # get student's group info
+
+
 def get_student_group(case_id):
     conn = get_connection()
     if not conn:
@@ -453,6 +502,8 @@ def get_student_group(case_id):
         return None
 
 # view all available groups
+
+
 def view_all_groups():
     conn = get_connection()
     if not conn:
