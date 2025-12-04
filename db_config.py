@@ -8,8 +8,8 @@ def get_connection():
         conn = mysql.connector.connect(
             host='localhost',
             database='travel_match',
-            user='root', 
-            password='Kpv12sql!'  # CHANGE THIS TOO!!
+            user='root',
+            password=''  # No password for fresh MySQL install
         )
         if conn.is_connected():
             return conn

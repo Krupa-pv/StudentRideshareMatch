@@ -2,6 +2,8 @@ import db_operations as db
 from db_config import test_connection
 
 # print the menu
+
+
 def show_menu():
     print("\n" + "="*60)
     print("     STUDENT RIDESHARE MATCHER")
@@ -22,11 +24,13 @@ def show_menu():
     print("="*60)
 
 # handl adding studnet
+
+
 def handle_add_student():
     print("\n--- Add New Student ---")
     case_id = input("Enter Case ID: ").strip()
     if not case_id:
-        print("Case ID canot be empty!")
+        print("Case ID cannot be empty!")
         return
 
     full_name = input("Enter Full Name: ").strip()
@@ -49,6 +53,8 @@ def handle_add_student():
         print("Failed to add student")
 
 # show all studnets in table format
+
+
 def handle_view_students():
     print("\n--- All Students ---")
     students = db.view_all_students()
@@ -70,6 +76,8 @@ def handle_view_students():
     print(f"\nTotal: {len(students)} student(s)")
 
 # add new flight
+
+
 def handle_add_flight():
     print("\n--- Add New Flight ---")
 
@@ -85,7 +93,8 @@ def handle_add_flight():
         print("Time cannot be empty!")
         return
 
-    departing_airport = input("Enter Departing Airport (e.g., CLE, ORD): ").strip().upper()
+    departing_airport = input(
+        "Enter Departing Airport (e.g., CLE, ORD): ").strip().upper()
     if not departing_airport:
         print("Airport code cannot be empty!")
         return
@@ -103,6 +112,8 @@ def handle_add_flight():
         print("Failed to add flight (might already exist)")
 
 # show all flights
+
+
 def handle_view_flights():
     print("\n--- All Flights ---")
     flights = db.view_all_flights()
@@ -123,6 +134,8 @@ def handle_view_flights():
     print(f"\nTotal: {len(flights)} flight(s)")
 
 # add train
+
+
 def handle_add_train():
     print("\n--- Add New Train ---")
 
@@ -155,6 +168,8 @@ def handle_add_train():
         print("Failed to add train (might already exist)")
 
 # show all trains
+
+
 def handle_view_trains():
     print("\n--- All Trains ---")
     trains = db.view_all_trains()
@@ -173,6 +188,8 @@ def handle_view_trains():
     print(f"\nTotal: {len(trains)} train(s)")
 
 # register student on flight for rideshare matching
+
+
 def handle_book_flight():
     print("\n--- Register Student's Flight ---")
     print("Add student to a flight to find rideshare matches\n")
@@ -193,6 +210,8 @@ def handle_book_flight():
         print("Failed to register flight")
 
 # register student on train for rideshare matching
+
+
 def handle_book_train():
     print("\n--- Register Student's Train ---")
     print("Add student to a train to find rideshare matches\n")
@@ -213,6 +232,8 @@ def handle_book_train():
         print("Failed to register train")
 
 # view all travel plans for a student
+
+
 def handle_student_bookings():
     print("\n--- Student Travel Plans ---")
     case_id = input("Enter Student Case ID: ").strip()
@@ -231,11 +252,13 @@ def handle_student_bookings():
     # show flights
     if flights:
         print("FLIGHTS:")
-        print(f"{'Flight ID':<25} {'Date':<15} {'Time':<12} {'Airport':<10} {'Confirmation':<15}")
+        print(
+            f"{'Flight ID':<25} {'Date':<15} {'Time':<12} {'Airport':<10} {'Confirmation':<15}")
         print("-" * 80)
         for flight in flights:
             fno, fdate, ftime, fairport, fconf = flight
-            print(f"{fno:<25} {str(fdate):<15} {str(ftime):<12} {fairport:<10} {fconf:<15}")
+            print(
+                f"{fno:<25} {str(fdate):<15} {str(ftime):<12} {fairport:<10} {fconf:<15}")
     else:
         print("FLIGHTS: None")
 
@@ -244,20 +267,25 @@ def handle_student_bookings():
     # show trains
     if trains:
         print("TRAINS:")
-        print(f"{'Train ID':<25} {'Date':<15} {'Time':<12} {'Station':<20} {'Confirmation':<15}")
+        print(
+            f"{'Train ID':<25} {'Date':<15} {'Time':<12} {'Station':<20} {'Confirmation':<15}")
         print("-" * 90)
         for train in trains:
             tno, tdate, ttime, tstation, tconf = train
-            print(f"{tno:<25} {str(tdate):<15} {str(ttime):<12} {tstation:<20} {tconf:<15}")
+            print(
+                f"{tno:<25} {str(tdate):<15} {str(ttime):<12} {tstation:<20} {tconf:<15}")
     else:
         print("TRAINS: None")
 
 # find students going to same destination with flexible time
+
+
 def handle_find_flight_matches():
     print("\n--- Find Flight Rideshare Matches ---")
     print("Find students going to same destination to split Uber/Lyft costs\n")
 
-    departing_airport = input("Enter Destination Airport (e.g., CLE, ORD): ").strip().upper()
+    departing_airport = input(
+        "Enter Destination Airport (e.g., CLE, ORD): ").strip().upper()
     if not departing_airport:
         print("Airport is required!")
         return
@@ -284,10 +312,12 @@ def handle_find_flight_matches():
     time_window_map = {'1': 1, '2': 2, '3': 3, '4': 12}
     time_window = time_window_map.get(choice, 2)  # default 2 hours
 
-    matches = db.find_matching_flights(departing_airport, flight_time, flight_date, time_window)
+    matches = db.find_matching_flights(
+        departing_airport, flight_time, flight_date, time_window)
 
     if not matches:
-        print(f"No matches found going to {departing_airport} on {flight_date}")
+        print(
+            f"No matches found going to {departing_airport} on {flight_date}")
         return
 
     print(f"\n** Students going to {departing_airport} on {flight_date} **")
@@ -303,6 +333,8 @@ def handle_find_flight_matches():
     print(f"\nTotal: {len(matches)} student(s) - potential rideshare group!")
 
 # find students on same train for ridesharing
+
+
 def handle_find_train_matches():
     print("\n--- Find Train Rideshare Matches ---")
     print("Find students on the same train to split ride costs\n")
@@ -320,7 +352,8 @@ def handle_find_train_matches():
         print("No matches found for this date/station")
         return
 
-    print(f"\n** Students traveling from {departing_station} on {train_date} **")
+    print(
+        f"\n** Students traveling from {departing_station} on {train_date} **")
     print("Connect with these students to share rideshare costs!\n")
     print(f"{'Case ID':<15} {'Name':<30} {'Train ID':<25} {'Time':<12}")
     print("-" * 85)
@@ -332,6 +365,8 @@ def handle_find_train_matches():
     print(f"\nTotal: {len(matches)} student(s) - potential rideshare group!")
 
 # main program loop
+
+
 def main():
     print("\nStarting Student Rideshare Matcher ")
 
@@ -384,6 +419,7 @@ def main():
         except Exception as e:
             print(f"\nAn error occurred: {e}")
             input("\nPress Enter to continue ")
+
 
 if __name__ == "__main__":
     main()
