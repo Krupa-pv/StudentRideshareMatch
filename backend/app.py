@@ -7,6 +7,8 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS for React frontend
 
 # Test database connection on startup
+
+
 @app.before_request
 def before_first_request():
     if not hasattr(app, 'db_tested'):
@@ -18,6 +20,7 @@ def before_first_request():
 
 # ==================== STUDENT ROUTES ====================
 
+
 @app.route('/api/students', methods=['GET'])
 def get_students():
     """Get all students"""
@@ -28,6 +31,7 @@ def get_students():
         'year_of_study': s[2],
         'group_id': s[3]
     } for s in students])
+
 
 @app.route('/api/students', methods=['POST'])
 def add_student():
@@ -47,6 +51,7 @@ def add_student():
 
 # ==================== FLIGHT ROUTES ====================
 
+
 @app.route('/api/flights', methods=['GET'])
 def get_flights():
     """Get all flights"""
@@ -57,6 +62,7 @@ def get_flights():
         'flight_time': str(f[2]),
         'departing_airport': f[3]
     } for f in flights])
+
 
 @app.route('/api/flights', methods=['POST'])
 def add_flight():
@@ -74,12 +80,14 @@ def add_flight():
     time_part = flight_time.replace(":", "")[:4]
     flight_no = f"{departing_airport}_{date_part}_{time_part}"
 
-    success = db.add_flight(flight_no, flight_date, flight_time, departing_airport)
+    success = db.add_flight(flight_no, flight_date,
+                            flight_time, departing_airport)
     if success:
         return jsonify({'message': 'Flight added successfully', 'flight_no': flight_no}), 201
     return jsonify({'error': 'Failed to add flight (might already exist)'}), 500
 
 # ==================== TRAIN ROUTES ====================
+
 
 @app.route('/api/trains', methods=['GET'])
 def get_trains():
@@ -91,6 +99,7 @@ def get_trains():
         'train_time': str(t[2]),
         'departing_station': t[3]
     } for t in trains])
+
 
 @app.route('/api/trains', methods=['POST'])
 def add_train():
@@ -116,6 +125,7 @@ def add_train():
 
 # ==================== BOOKING ROUTES ====================
 
+
 @app.route('/api/bookings/flight', methods=['POST'])
 def book_flight():
     """Register student on a flight"""
@@ -132,6 +142,7 @@ def book_flight():
         return jsonify({'message': 'Flight booked successfully'}), 201
     return jsonify({'error': 'Failed to book flight'}), 500
 
+
 @app.route('/api/bookings/train', methods=['POST'])
 def book_train():
     """Register student on a train"""
@@ -147,6 +158,7 @@ def book_train():
     if success:
         return jsonify({'message': 'Train booked successfully'}), 201
     return jsonify({'error': 'Failed to book train'}), 500
+
 
 @app.route('/api/bookings/student/<case_id>', methods=['GET'])
 def get_student_bookings(case_id):
@@ -176,6 +188,7 @@ def get_student_bookings(case_id):
 
 # ==================== MATCHING ROUTES ====================
 
+
 @app.route('/api/matches/flights', methods=['POST'])
 def find_flight_matches():
     """Find rideshare matches for flights"""
@@ -188,7 +201,8 @@ def find_flight_matches():
     if not all([departing_airport, flight_date, flight_time]):
         return jsonify({'error': 'Missing required fields'}), 400
 
-    matches = db.find_matching_flights(departing_airport, flight_time, flight_date, time_window)
+    matches = db.find_matching_flights(
+        departing_airport, flight_time, flight_date, time_window)
 
     matches_data = [{
         'case_id': m[0],
@@ -203,6 +217,7 @@ def find_flight_matches():
         'matches': matches_data,
         'count': len(matches_data)
     })
+
 
 @app.route('/api/matches/trains', methods=['POST'])
 def find_train_matches():
@@ -231,6 +246,7 @@ def find_train_matches():
 
 # ==================== GROUP ROUTES ====================
 
+
 @app.route('/api/groups', methods=['GET'])
 def get_groups():
     """Get all groups with member counts"""
@@ -240,6 +256,7 @@ def get_groups():
         'group_name': g[1],
         'member_count': g[2]
     } for g in groups])
+
 
 @app.route('/api/groups', methods=['POST'])
 def create_group():
@@ -255,6 +272,7 @@ def create_group():
         return jsonify({'message': 'Group created successfully', 'group_id': group_id}), 201
     return jsonify({'error': 'Failed to create group'}), 500
 
+
 @app.route('/api/groups/<int:group_id>/members', methods=['GET'])
 def get_group_members(group_id):
     """Get all members of a group"""
@@ -264,6 +282,7 @@ def get_group_members(group_id):
         'full_name': m[1],
         'year_of_study': m[2]
     } for m in members])
+
 
 @app.route('/api/groups/join', methods=['POST'])
 def join_group():
@@ -280,6 +299,7 @@ def join_group():
         return jsonify({'message': 'Joined group successfully'}), 200
     return jsonify({'error': 'Failed to join group'}), 500
 
+
 @app.route('/api/groups/leave', methods=['POST'])
 def leave_group():
     """Student leaves their group"""
@@ -294,6 +314,7 @@ def leave_group():
         return jsonify({'message': 'Left group successfully'}), 200
     return jsonify({'error': 'Failed to leave group'}), 500
 
+
 @app.route('/api/groups/student/<case_id>', methods=['GET'])
 def get_student_group(case_id):
     """Get the group a student belongs to"""
@@ -307,10 +328,12 @@ def get_student_group(case_id):
 
 # ==================== HEALTH CHECK ====================
 
+
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
     return jsonify({'status': 'ok', 'message': 'API is running'})
+
 
 if __name__ == '__main__':
     print("\n" + "="*60)
