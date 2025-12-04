@@ -8,11 +8,17 @@ function Home() {
         Match with students traveling to the same destination and split rideshare costs.
       </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto mt-12">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto mt-12">
         {/* View Students Card */}
         <Link to="/students" className="border-2 border-black p-8 hover:bg-black hover:text-white transition-colors">
           <h3 className="text-xl font-bold mb-2">View Students</h3>
           <p className="text-sm">See all registered students</p>
+        </Link>
+
+        {/* Bookings Card */}
+        <Link to="/bookings" className="border-2 border-black p-8 hover:bg-black hover:text-white transition-colors">
+          <h3 className="text-xl font-bold mb-2">Manage Bookings</h3>
+          <p className="text-sm">Add flights/trains and register your bookings</p>
         </Link>
 
         {/* Find Matches Card */}

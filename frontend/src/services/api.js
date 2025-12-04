@@ -6,6 +6,15 @@ export const api = {
   // Students
   getStudents: () => axios.get(`${API_BASE_URL}/students`),
   addStudent: (data) => axios.post(`${API_BASE_URL}/students`, data),
+  deleteStudent: (caseId) => axios.delete(`${API_BASE_URL}/students/${caseId}`),
+
+  // Flights
+  getFlights: () => axios.get(`${API_BASE_URL}/flights`),
+  addFlight: (data) => axios.post(`${API_BASE_URL}/flights`, data),
+
+  // Trains
+  getTrains: () => axios.get(`${API_BASE_URL}/trains`),
+  addTrain: (data) => axios.post(`${API_BASE_URL}/trains`, data),
 
   // Flights
   getFlights: () => axios.get(`${API_BASE_URL}/flights`),

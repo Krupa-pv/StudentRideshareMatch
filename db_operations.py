@@ -32,6 +32,38 @@ def add_student(case_id, full_name, year_of_study):
             conn.close()
         return False
 
+# delete a student from database
+
+
+def delete_student(case_id):
+    conn = get_connection()
+    if not conn:
+        return False
+
+    try:
+        cursor = conn.cursor()
+        # Check if student exists
+        cursor.execute(
+            "SELECT case_id FROM Student WHERE case_id = %s", (case_id,))
+        if not cursor.fetchone():
+            print(f"Student with case_id '{case_id}' not found!")
+            cursor.close()
+            conn.close()
+            return False
+
+        # Delete the student (cascades will handle bookings)
+        query = "DELETE FROM Student WHERE case_id = %s"
+        cursor.execute(query, (case_id,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+    except Error as e:
+        print(f"Error deleting student: {e}")
+        if conn:
+            conn.close()
+        return False
+
 # get all students from db
 
 

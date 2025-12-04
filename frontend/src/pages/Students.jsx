@@ -20,8 +20,8 @@ function Students() {
       setLoading(true);
       const response = await api.getStudents();
       // Handle both array response and object with students property
-      const studentsData = Array.isArray(response.data) 
-        ? response.data 
+      const studentsData = Array.isArray(response.data)
+        ? response.data
         : (response.data?.students || []);
       setStudents(studentsData);
       setLoading(false);
@@ -57,6 +57,21 @@ function Students() {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleDelete = async (caseId) => {
+    if (!window.confirm(`Are you sure you want to delete student ${caseId}? This will also delete all their flight and train bookings.`)) {
+      return;
+    }
+
+    try {
+      await api.deleteStudent(caseId);
+      loadStudents();
+    } catch (error) {
+      console.error('Error deleting student:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to delete student.';
+      alert(errorMessage);
+    }
   };
 
   if (loading) {
@@ -126,11 +141,12 @@ function Students() {
       )}
 
       <div className="border-2 border-black">
-        <div className="grid grid-cols-4 gap-4 p-4 border-b-2 border-black font-bold bg-black text-white">
+        <div className="grid grid-cols-5 gap-4 p-4 border-b-2 border-black font-bold bg-black text-white">
           <div>Case ID</div>
           <div>Full Name</div>
           <div>Year of Study</div>
           <div>Group ID</div>
+          <div>Actions</div>
         </div>
         {students.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
@@ -140,12 +156,20 @@ function Students() {
           students.map((student, idx) => (
             <div
               key={idx}
-              className="grid grid-cols-4 gap-4 p-4 border-b border-gray-300 hover:bg-gray-50"
+              className="grid grid-cols-5 gap-4 p-4 border-b border-gray-300 hover:bg-gray-50"
             >
               <div className="font-medium">{student.case_id}</div>
               <div>{student.full_name}</div>
               <div>{student.year_of_study}</div>
               <div className="text-sm">{student.group_id || 'None'}</div>
+              <div>
+                <button
+                  onClick={() => handleDelete(student.case_id)}
+                  className="text-red-600 hover:text-red-800 font-medium text-sm underline"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           ))
         )}

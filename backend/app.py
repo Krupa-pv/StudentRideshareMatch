@@ -55,6 +55,18 @@ def add_student():
         return jsonify({'message': 'Student added successfully', 'case_id': case_id}), 201
     return jsonify({'error': 'Failed to add student'}), 500
 
+
+@app.route('/api/students/<case_id>', methods=['DELETE'])
+def delete_student(case_id):
+    """Delete a student"""
+    if not case_id:
+        return jsonify({'error': 'Case ID is required'}), 400
+
+    success = db.delete_student(case_id)
+    if success:
+        return jsonify({'message': f'Student {case_id} deleted successfully'}), 200
+    return jsonify({'error': 'Failed to delete student (student may not exist)'}), 404
+
 # ==================== FLIGHT ROUTES ====================
 
 

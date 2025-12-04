@@ -3,6 +3,7 @@ import Home from './pages/Home';
 import Students from './pages/Students';
 import FindMatches from './pages/FindMatches';
 import Groups from './pages/Groups';
+import Bookings from './pages/Bookings';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
             <div className="flex justify-center gap-8">
               <Link to="/" className="hover:underline font-medium">Home</Link>
               <Link to="/students" className="hover:underline font-medium">Students</Link>
+              <Link to="/bookings" className="hover:underline font-medium">Bookings</Link>
               <Link to="/groups" className="hover:underline font-medium">Groups</Link>
               <Link to="/matches" className="hover:underline font-medium">Find Matches</Link>
             </div>
@@ -33,6 +35,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/students" element={<Students />} />
+            <Route path="/bookings" element={<Bookings />} />
             <Route path="/groups" element={<Groups />} />
             <Route path="/matches" element={<FindMatches />} />
           </Routes>
