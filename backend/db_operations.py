@@ -278,6 +278,11 @@ def find_matching_flights(departing_airport, flight_time, flight_date, time_wind
 
     try:
         cursor = conn.cursor()
+        # Normalize time format - ensure it's HH:MM:SS
+        # If time is in HH:MM format, add :00 for seconds
+        if flight_time and len(flight_time.split(':')) == 2:
+            flight_time = flight_time + ':00'
+
         # find students going to same destination airport within time window on same date
         query = """
         SELECT s.case_id, s.full_name, f.flight_no, f.flight_time, f.flight_date, f.departing_airport
