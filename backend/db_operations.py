@@ -11,6 +11,15 @@ def add_student(case_id, full_name, year_of_study):
 
     try:
         cursor = conn.cursor()
+        # Check if student already exists
+        cursor.execute(
+            "SELECT case_id FROM Student WHERE case_id = %s", (case_id,))
+        if cursor.fetchone():
+            print(f"Student with case_id '{case_id}' already exists!")
+            cursor.close()
+            conn.close()
+            return False
+
         query = "INSERT INTO Student (case_id, full_name, year_of_study) VALUES (%s, %s, %s)"
         cursor.execute(query, (case_id, full_name, year_of_study))
         conn.commit()

@@ -44,6 +44,12 @@ def add_student():
     if not all([case_id, full_name, year_of_study]):
         return jsonify({'error': 'Missing required fields'}), 400
 
+    # Check if student already exists
+    existing_students = db.view_all_students()
+    for s in existing_students:
+        if s[0] == case_id:
+            return jsonify({'error': f'Student with Case ID "{case_id}" already exists'}), 409
+
     success = db.add_student(case_id, full_name, year_of_study)
     if success:
         return jsonify({'message': 'Student added successfully', 'case_id': case_id}), 201

@@ -7,10 +7,8 @@ function Students() {
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     case_id: '',
-    first_name: '',
-    last_name: '',
-    email: '',
-    phone: ''
+    full_name: '',
+    year_of_study: ''
   });
 
   useEffect(() => {
@@ -19,25 +17,41 @@ function Students() {
 
   const loadStudents = async () => {
     try {
+      setLoading(true);
       const response = await api.getStudents();
-      setStudents(response.data.students || []);
+      // Handle both array response and object with students property
+      const studentsData = Array.isArray(response.data) 
+        ? response.data 
+        : (response.data?.students || []);
+      setStudents(studentsData);
       setLoading(false);
     } catch (error) {
       console.error('Error loading students:', error);
-      setLoading(false);
+      // If it's a network error, try again after a short delay
+      if (error.code === 'ECONNREFUSED' || error.message?.includes('Network')) {
+        console.log('Backend not ready, retrying in 1 second...');
+        setTimeout(() => {
+          loadStudents();
+        }, 1000);
+      } else {
+        setLoading(false);
+      }
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.addStudent(formData);
-      setFormData({ case_id: '', first_name: '', last_name: '', email: '', phone: '' });
+      const response = await api.addStudent(formData);
+      setFormData({ case_id: '', full_name: '', year_of_study: '' });
       setShowForm(false);
       loadStudents();
     } catch (error) {
       console.error('Error adding student:', error);
-      alert('Failed to add student. Check console for details.');
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to add student. Check console for details.';
+      alert(errorMessage);
+      // Still refresh the list in case the student already existed
+      loadStudents();
     }
   };
 
@@ -78,49 +92,27 @@ function Students() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Email</label>
+              <label className="block text-sm font-medium mb-1">Full Name</label>
               <input
-                type="email"
-                name="email"
-                value={formData.email}
+                type="text"
+                name="full_name"
+                value={formData.full_name}
                 onChange={handleChange}
                 required
                 className="w-full border-2 border-black px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-                placeholder="student@case.edu"
+                placeholder="e.g., John Doe"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">First Name</label>
+              <label className="block text-sm font-medium mb-1">Year of Study</label>
               <input
                 type="text"
-                name="first_name"
-                value={formData.first_name}
+                name="year_of_study"
+                value={formData.year_of_study}
                 onChange={handleChange}
                 required
                 className="w-full border-2 border-black px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Last Name</label>
-              <input
-                type="text"
-                name="last_name"
-                value={formData.last_name}
-                onChange={handleChange}
-                required
-                className="w-full border-2 border-black px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-              />
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium mb-1">Phone</label>
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                required
-                className="w-full border-2 border-black px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-                placeholder="123-456-7890"
+                placeholder="e.g., Freshman, Sophomore, Junior, Senior"
               />
             </div>
           </div>
@@ -134,12 +126,11 @@ function Students() {
       )}
 
       <div className="border-2 border-black">
-        <div className="grid grid-cols-5 gap-4 p-4 border-b-2 border-black font-bold bg-black text-white">
+        <div className="grid grid-cols-4 gap-4 p-4 border-b-2 border-black font-bold bg-black text-white">
           <div>Case ID</div>
-          <div>First Name</div>
-          <div>Last Name</div>
-          <div>Email</div>
-          <div>Phone</div>
+          <div>Full Name</div>
+          <div>Year of Study</div>
+          <div>Group ID</div>
         </div>
         {students.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
@@ -149,13 +140,12 @@ function Students() {
           students.map((student, idx) => (
             <div
               key={idx}
-              className="grid grid-cols-5 gap-4 p-4 border-b border-gray-300 hover:bg-gray-50"
+              className="grid grid-cols-4 gap-4 p-4 border-b border-gray-300 hover:bg-gray-50"
             >
               <div className="font-medium">{student.case_id}</div>
-              <div>{student.first_name}</div>
-              <div>{student.last_name}</div>
-              <div className="text-sm">{student.email}</div>
-              <div className="text-sm">{student.phone}</div>
+              <div>{student.full_name}</div>
+              <div>{student.year_of_study}</div>
+              <div className="text-sm">{student.group_id || 'None'}</div>
             </div>
           ))
         )}
