@@ -20,12 +20,13 @@ def show_menu():
     print("9.  View Student's Travel Plans")
     print("10. Find Rideshare Matches (Flights)")
     print("11. Find Rideshare Matches (Trains)")
-    print("12. Create Transport Group")
-    print("13. Join Transport Group")
-    print("14. Leave Group")
-    print("15. View My Group Members")
-    print("16. View All Groups")
-    print("17. Exit")
+    print("12. Find Rideshare Matches for My Group")
+    print("13. Create Transport Group")
+    print("14. Join Transport Group")
+    print("15. Leave Group")
+    print("16. View My Group Members")
+    print("17. View All Groups")
+    print("18. Exit")
     print("="*60)
 
 # handl adding studnet
@@ -369,6 +370,78 @@ def handle_find_train_matches():
 
     print(f"\nTotal: {len(matches)} student(s) - potential rideshare group!")
 
+# find rideshare matches for a transport group
+def handle_find_group_matches():
+    print("\n--- Find Rideshare Matches for Your Group ---")
+    print("Search for rideshare matches using your group's travel plans\n")
+
+    # first get all groups so user can see what's available
+    groups = db.view_all_groups()
+    if not groups:
+        print("No groups found. Create a group first!")
+        return
+
+    print("Available Groups:")
+    print(f"{'Group ID':<12} {'Group Name':<30} {'Members':<10}")
+    print("-" * 55)
+    for group in groups:
+        group_id, group_name, member_count = group
+        print(f"{group_id:<12} {group_name:<30} {member_count:<10}")
+    print()
+
+    try:
+        group_id = int(input("Enter Your Group ID: ").strip())
+    except ValueError:
+        print("Please enter a valid group ID number!")
+        return
+
+    # check if user is in this group (optional but helpful)
+    case_id = input("Enter Your Case ID (to verify membership): ").strip()
+    if case_id:
+        user_group = db.get_student_group(case_id)
+        if not user_group or user_group[0] != group_id:
+            print(f"Warning: You don't appear to be in group {group_id}")
+            confirm = input("Continue anyway? (yes/no): ").strip().lower()
+            if confirm != 'yes':
+                return
+
+    # find matches for this group
+    search_info, matches = db.find_matches_for_group(group_id)
+
+    if not search_info:
+        print("No flight information found for this group")
+        print("At least one group member must register a flight first")
+        return
+
+    # display search info
+    member = search_info['member']
+    flight = search_info['flight']
+    flight_no, flight_date, flight_time, departing_airport = flight
+
+    print(f"\n** Searching based on {member[1]}'s flight **")
+    print(f"Destination: {departing_airport}")
+    print(f"Date: {flight_date}")
+    print(f"Time: {flight_time}")
+    print(f"Search window: +/- 2 hours\n")
+
+    if not matches:
+        print("No other students/groups found for this destination and time")
+        return
+
+    print(f"** Potential Rideshare Partners **")
+    print("Connect with these students/groups to split costs!\n")
+    print(f"{'Case ID':<15} {'Name':<30} {'Flight Time':<15} {'Flight ID':<25}")
+    print("-" * 90)
+
+    for match in matches:
+        case_id, name, flight_no, ftime, fdate, airport = match
+        # handle None values for group members
+        ftime_str = str(ftime) if ftime else 'GROUP MEMBER'
+        fno_str = flight_no if flight_no else 'N/A'
+        print(f"{case_id:<15} {name:<30} {ftime_str:<15} {fno_str:<25}")
+
+    print(f"\nTotal: {len(matches)} student(s) - potential rideshare partners!")
+
 # create new transport group
 def handle_create_group():
     print("\n--- Create Transport Group ---")
@@ -486,7 +559,7 @@ def handle_view_all_groups():
         print(f"{group_id:<12} {group_name:<30} {member_count:<10}")
 
     print(f"\nTotal: {len(groups)} group(s)")
-    print("\nUse option 13 to join a group by its Group ID")
+    print("\nUse option 14 to join a group by its Group ID")
 
 # main program loop
 
@@ -504,7 +577,7 @@ def main():
         show_menu()
 
         try:
-            choice = input("\nEnter your choice (1-17): ").strip()
+            choice = input("\nEnter your choice (1-18): ").strip()
 
             if choice == '1':
                 handle_add_student()
@@ -529,20 +602,22 @@ def main():
             elif choice == '11':
                 handle_find_train_matches()
             elif choice == '12':
-                handle_create_group()
+                handle_find_group_matches()
             elif choice == '13':
-                handle_join_group()
+                handle_create_group()
             elif choice == '14':
-                handle_leave_group()
+                handle_join_group()
             elif choice == '15':
-                handle_view_my_group()
+                handle_leave_group()
             elif choice == '16':
-                handle_view_all_groups()
+                handle_view_my_group()
             elif choice == '17':
+                handle_view_all_groups()
+            elif choice == '18':
                 print("\n Exiting travel match system!")
                 break
             else:
-                print("Invalid choice! Please enter a number between 1 and 17")
+                print("Invalid choice! Please enter a number between 1 and 18")
 
             # wait for user before showing menu again
             input("\nPress Enter to continue ")

@@ -32,6 +32,7 @@ export const api = {
   // Matches - THE CORE FEATURE
   findFlightMatches: (data) => axios.post(`${API_BASE_URL}/matches/flights`, data),
   findTrainMatches: (data) => axios.post(`${API_BASE_URL}/matches/trains`, data),
+  findGroupMatches: (groupId) => axios.get(`${API_BASE_URL}/matches/group/${groupId}`),
 
   // Groups
   getGroups: () => axios.get(`${API_BASE_URL}/groups`),

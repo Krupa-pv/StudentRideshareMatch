@@ -402,6 +402,130 @@ def find_matching_trains(train_date, departing_station):
             conn.close()
         return []
 
+# find rideshare matches for an entire group
+def find_matches_for_group(group_id):
+    """
+    Find rideshare matches for a transport group
+    Uses first group member's flight to search for matches
+    """
+    conn = get_connection()
+    if not conn:
+        return None, []
+
+    try:
+        cursor = conn.cursor()
+
+        # get group members
+        cursor.execute("""
+            SELECT s.case_id, s.full_name
+            FROM Student s
+            WHERE s.group_id = %s
+            ORDER BY s.full_name
+        """, (group_id,))
+        members = cursor.fetchall()
+
+        if not members:
+            cursor.close()
+            conn.close()
+            return None, []
+
+        # find first member who has a flight registered
+        search_member = None
+        flight_info = None
+
+        for member_id, member_name in members:
+            cursor.execute("""
+                SELECT f.flight_no, f.flight_date, f.flight_time, f.departing_airport
+                FROM StudentFlight sf
+                JOIN Flight f ON sf.flight_no = f.flight_no
+                WHERE sf.case_id = %s
+                ORDER BY f.flight_date, f.flight_time
+                LIMIT 1
+            """, (member_id,))
+
+            result = cursor.fetchone()
+            if result:
+                search_member = (member_id, member_name)
+                flight_info = result
+                break
+
+        if not flight_info:
+            cursor.close()
+            conn.close()
+            return None, []
+
+        # use this flight info to find matches
+        flight_no, flight_date, flight_time, departing_airport = flight_info
+
+        # use 2 hour default window for group searches
+        # match with ANY students (individuals or other groups) EXCEPT your own group
+        query = """
+        SELECT s.case_id, s.full_name, f.flight_no, f.flight_time, f.flight_date, f.departing_airport, s.group_id
+        FROM Student s
+        JOIN StudentFlight sf ON s.case_id = sf.case_id
+        JOIN Flight f ON sf.flight_no = f.flight_no
+        WHERE f.departing_airport = %s
+        AND f.flight_date = %s
+        AND f.flight_time BETWEEN
+            SUBTIME(%s, '2:00:00') AND ADDTIME(%s, '2:00:00')
+        AND (s.group_id IS NULL OR s.group_id != %s)
+        ORDER BY f.flight_time, s.full_name
+        """
+
+        cursor.execute(query, (departing_airport, flight_date, flight_time,
+                              flight_time, group_id))
+        direct_matches = cursor.fetchall()
+
+        # collect group ids and expand - include all OTHER groups from matches
+        group_ids = set()
+        for match in direct_matches:
+            gid = match[6]
+            if gid is not None and gid != group_id:
+                group_ids.add(gid)
+
+        all_results = []
+        seen_case_ids = set()
+
+        # add direct matches
+        for match in direct_matches:
+            case_id = match[0]
+            if case_id not in seen_case_ids:
+                all_results.append(match[:6])
+                seen_case_ids.add(case_id)
+
+        # add other group members
+        for gid in group_ids:
+            cursor.execute("""
+                SELECT s.case_id, s.full_name, 'GROUP MEMBER' as flight_no,
+                       NULL as flight_time, NULL as flight_date, NULL as departing_airport
+                FROM Student s
+                WHERE s.group_id = %s
+            """, (gid,))
+            group_members = cursor.fetchall()
+
+            for member in group_members:
+                case_id = member[0]
+                if case_id not in seen_case_ids:
+                    all_results.append(member)
+                    seen_case_ids.add(case_id)
+
+        cursor.close()
+        conn.close()
+
+        # return search info and matches
+        search_info = {
+            'member': search_member,
+            'flight': flight_info
+        }
+
+        return search_info, all_results
+
+    except Error as e:
+        print(f"Error finding group matches: {e}")
+        if conn:
+            conn.close()
+        return None, []
+
 # create a new transport group
 
 

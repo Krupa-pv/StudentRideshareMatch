@@ -262,6 +262,44 @@ def find_train_matches():
         'count': len(matches_data)
     })
 
+
+@app.route('/api/matches/group/<int:group_id>', methods=['GET'])
+def find_group_matches(group_id):
+    """Find rideshare matches for a transport group"""
+    search_info, matches = db.find_matches_for_group(group_id)
+
+    if not search_info:
+        return jsonify({'error': 'No flight information found for this group'}), 404
+
+    # format search info
+    member = search_info['member']
+    flight = search_info['flight']
+
+    search_data = {
+        'member_case_id': member[0],
+        'member_name': member[1],
+        'flight_no': flight[0],
+        'flight_date': str(flight[1]),
+        'flight_time': str(flight[2]),
+        'departing_airport': flight[3]
+    }
+
+    # format matches
+    matches_data = [{
+        'case_id': m[0],
+        'full_name': m[1],
+        'flight_no': m[2] if m[2] else 'GROUP MEMBER',
+        'flight_time': str(m[3]) if m[3] else None,
+        'flight_date': str(m[4]) if m[4] else None,
+        'departing_airport': m[5] if m[5] else None
+    } for m in matches]
+
+    return jsonify({
+        'search_info': search_data,
+        'matches': matches_data,
+        'count': len(matches_data)
+    })
+
 # ==================== GROUP ROUTES ====================
 
 
