@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-## Step 1: Install Dependancies
+## Step 1: Install Dependencies
 
 ```bash
 pip install -r requirements.txt

@@ -1,8 +1,8 @@
 import mysql.connector
 from mysql.connector import Error
 
-# connction functin for databse
-# TODO: change these credentials befor running!!
+# database connection function
+# TODO: change these credentials before running!!
 def get_connection():
     try:
         conn = mysql.connector.connect(
@@ -14,7 +14,7 @@ def get_connection():
         if conn.is_connected():
             return conn
     except Error as e:
-        print(f"Error conectng to MySQL: {e}")
+        print(f"Error connecting to MySQL: {e}")
         return None
 
 # test if connection works

@@ -54,7 +54,7 @@ def handle_add_student():
         return
 
     if db.add_student(case_id, full_name, year_of_study):
-        print(f"Student {full_name} added succesfully!")
+        print(f"Student {full_name} added successfully!")
     else:
         print("Failed to add student")
 
@@ -73,7 +73,7 @@ def handle_view_students():
     print(f"{'Case ID':<15} {'Full Name':<30} {'Year':<8} {'Group ID':<10}")
     print("-" * 70)
 
-    # print each studnet
+    # print each student
     for student in students:
         case_id, name, year, group_id = student
         group_str = str(group_id) if group_id else "N/A"
